@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+        }
+
+        .app-card {
+            max-width: 450px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            shadow-lg;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            border-color: #24A1DE;
+            background: #f0f9ff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-card shadow-2xl">
+        <!-- Header Section -->
+        <div class="bg-[#24A1DE] p-8 pb-2 pt-2 text-center text-white">
+            <h1 class="text-2xl font-bold uppercase tracking-wide" id="vendorHeader">New Refrigeration India</h1>
+            <p class="text-sm opacity-80 mt-0">An Authorized Samsung Service Center</p>
+        </div>
+
+        <div class="p-4 space-y-4">
+            <!-- 1. Manual Call ID Entry -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Call ID Number (Manual)</label>
+                <input type="text" id="manualCallId" placeholder="Enter Call ID here..."
+                    class="w-full p-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition"
+                    oninput="syncCallId()">
+            </div>
+
+            <!-- 2. Image Upload Button -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Installation Photos</label>
+                <div class="upload-area rounded-xl p-8 text-center relative cursor-pointer">
+                    <input type="file" id="imageFiles" multiple accept="image/*"
+                        class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect()">
+                    <div id="statusIcon">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <p id="fileStatus" class="mt-2 text-sm text-gray-500 font-medium">Click to select multiple images
+                    </p>
+                </div>
+            </div>
+
+            <!-- 3. Auto-Fill Call ID (Read Only) -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">System Verified ID (Auto-Fill)</label>
+                <input type="text" id="autoCallId" readonly
+                    class="w-full p-2 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 italic outline-none"
+                    placeholder="Auto-fills from above...">
+            </div>
+
+            <!-- 4. Submit Button -->
+            <button onclick="sendData()" id="submitBtn"
+                class="w-full bg-[#24A1DE] hover:bg-[#1d86ba] text-white font-bold py-4 rounded-xl shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2">
+                <span>Send Feedback to Telegram</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const BOT_TOKEN = '8663616668:AAEV6r-gjE8gEHHqve2O7FScdQTYR1Bbylk'; // Apna naya Token yahan dalein
+        const vendorConfig = {
+            "v1_zamir": "-1003668891627", // Pehle channel ki ID
+            "v2_shaqib": "-1003980380666", // Dusre channel ki ID
+            "v3_irfan": "-1003955427060"  // Teesre channel ki ID
+        };
+
+        // URL se Vendor pehchanna (?v=v1)
+        const params = new URLSearchParams(window.location.search);
+        const vendorKey = params.get('v') || 'default';
+        const CHAT_ID = vendorConfig[vendorKey];
+
+        if (vendorKey !== 'default') {
+            document.getElementById('vendorHeader').innerText = "Hi, " + vendorKey.toUpperCase();
+        }
+
+        // Call ID Sync Logic
+        function syncCallId() {
+            const val = document.getElementById('manualCallId').value;
+            document.getElementById('autoCallId').value = val;
+        }
+
+        // File Selection UI Update
+        function handleFileSelect() {
+            const files = document.getElementById('imageFiles').files;
+            const status = document.getElementById('fileStatus');
+            if (files.length > 0) {
+                status.innerText = "✅ " + files.length + " Photos Selected";
+                status.classList.add('text-green-600');
+            }
+        }
+
+        // Main Send Function
+        async function sendData() {
+            const callId = document.getElementById('manualCallId').value;
+            const files = document.getElementById('imageFiles').files;
+            const btn = document.getElementById('submitBtn');
+
+            if (!CHAT_ID) return alert("Error: Invalid Vendor Link!");
+            if (!callId) return alert("Please enter Call ID");
+            if (files.length === 0) return alert("Please select at least one photo");
+
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...`;
+
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const formData = new FormData();
+                    formData.append('chat_id', CHAT_ID);
+                    formData.append('photo', files[i]);
+
+                    // Caption sirf pehli photo mein jayega
+                    if (i === 0) {
+                        formData.append('caption', `✅ *NEW INSTALLATION*\n\n👤 Vendor: ${vendorKey.toUpperCase()}\n🆔 Call ID: ${callId}\n📸 Total Photos: ${files.length}`);
+                        formData.append('parse_mode', 'Markdown');
+                    }
+
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                alert("Success! All photos sent to Telegram.");
+                location.reload();
+            } catch (error) {
+                alert("Error sending. Check internet or Token.");
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Send Feedback to Telegram";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
