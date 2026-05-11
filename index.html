@@ -7,28 +7,10 @@
     <title>Vendor App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background-color: #f3f4f6;
-        }
-
-        .app-card {
-            max-width: 300px;
-            margin: 20px auto;
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            shadow-lg;
-        }
-
-        .upload-area {
-            border: 2px dashed #cbd5e1;
-            transition: all 0.3s;
-        }
-
-        .upload-area:hover {
-            border-color: #24A1DE;
-            background: #f0f9ff;
-        }
+        body { background-color: #f3f4f6; }
+        .app-card { max-width: 300px; margin: 20px auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .upload-area { border: 2px dashed #cbd5e1; transition: all 0.3s; }
+        .upload-area:hover { border-color: #24A1DE; background: #f0f9ff; }
     </style>
 </head>
 
@@ -57,14 +39,11 @@
                     <input type="file" id="imageFiles" multiple accept="image/*"
                         class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect()">
                     <div id="statusIcon">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <p id="fileStatus" class="mt-2 text-sm text-gray-500 font-medium">Click to select multiple images
-                    </p>
+                    <p id="fileStatus" class="mt-2 text-sm text-gray-500 font-medium">Click to select multiple images</p>
                 </div>
             </div>
 
@@ -86,14 +65,13 @@
 
     <script>
         // --- CONFIGURATION ---
-        const BOT_TOKEN = '8663616668:AAEV6r-gjE8gEHHqve2O7FScdQTYR1Bbylk'; // Apna naya Token yahan dalein
+        const BOT_TOKEN = '8663616668:AAEV6r-gjE8gEHHqve2O7FScdQTYR1Bbylk'; 
         const vendorConfig = {
-            "v1_zamir": "-1003668891627", // Pehle channel ki ID
-            "v2_shaqib": "-1003980380666", // Dusre channel ki ID
-            "v3_irfan": "-1003955427060"  // Teesre channel ki ID
+            "v1_zamir": "-1003668891627",
+            "v2_shaqib": "-1003980380666",
+            "v3_irfan": "-1003955427060"
         };
 
-        // URL se Vendor pehchanna (?v=v1)
         const params = new URLSearchParams(window.location.search);
         const vendorKey = params.get('v') || 'default';
         const CHAT_ID = vendorConfig[vendorKey];
@@ -102,13 +80,11 @@
             document.getElementById('vendorHeader').innerText = "Hi, " + vendorKey.toUpperCase();
         }
 
-        // Call ID Sync Logic
         function syncCallId() {
             const val = document.getElementById('manualCallId').value;
             document.getElementById('autoCallId').value = val;
         }
 
-        // File Selection UI Update
         function handleFileSelect() {
             const files = document.getElementById('imageFiles').files;
             const status = document.getElementById('fileStatus');
@@ -118,84 +94,56 @@
             }
         }
 
-        // Main Send Function
-   async function sendData() {
-        const callId = document.getElementById('manualCallId').value;
-        const files = document.getElementById('imageFiles').files;
-        const btn = document.getElementById('submitBtn');
+        async function sendData() {
+            const callId = document.getElementById('manualCallId').value;
+            const files = document.getElementById('imageFiles').files;
+            const btn = document.getElementById('submitBtn');
 
-        if (!CHAT_ID) return alert("Error: Invalid Vendor Link!");
-        if (!callId) return alert("Please enter Call ID");
-        if (files.length === 0) return alert("Please select at least one photo");
+            if (!CHAT_ID) return alert("Error: Invalid Vendor Link!");
+            if (!callId) return alert("Please enter Call ID");
+            if (files.length === 0) return alert("Please select at least one photo");
 
-        btn.disabled = true;
-        btn.innerHTML = `Sending...`;
+            btn.disabled = true;
+            btn.innerHTML = `Sending...`;
 
-        try {
-            // --- STEP 1: Pehle Start Message bhejna ---
-            const textMsg = `<b>🔔 NEW JOB STARTED</b>\n\n<b>👤 Vendor:</b> ${vendorKey.toUpperCase()}\n<b>🆔 Call ID:</b> ${callId}\n\n<i>Photos niche aa rahi hain...</i>`;
-            
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: CHAT_ID,
-                    text: textMsg,
-                    parse_mode: 'HTML'
-                })
-            });
-
-            // --- STEP 2: Saari Photos bhejna (Loop) ---
-            for (let i = 0; i < files.length; i++) {
-                const formData = new FormData();
-                formData.append('chat_id', CHAT_ID);
-                formData.append('photo', files[i]);
-                formData.append('caption', `Photo ${i+1} - ID: ${callId}`);
-
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+            try {
+                // 1. Send Text Message First
+                const textMsg = `<b>🔔 NEW JOB STARTED</b>\n\n<b>👤 Vendor:</b> ${vendorKey.toUpperCase()}\n<b>🆔 Call ID:</b> ${callId}\n\n<i>Photos niche aa rahi hain...</i>`;
+                
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: textMsg,
+                        parse_mode: 'HTML'
+                    })
                 });
+
+                // 2. Send Photos
+                for (let i = 0; i < files.length; i++) {
+                    const formData = new FormData();
+                    formData.append('chat_id', CHAT_ID);
+                    formData.append('photo', files[i]);
+                    formData.append('caption', `Photo ${i+1} - ID: ${callId}`);
+
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+
+                alert("Success! Pehle Text gaya phir saari Photos.");
+                location.reload();
+
+            } catch (error) {
+                alert("Error sending. Check internet or Token.");
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Send Feedback to Telegram";
             }
-
-            // --- STEP 3: Sab khatam hone ke baad Divider Line bhejna (Loop ke BAHAAR) ---
-            const dividerText = `<b>━━━━━━━━━━━━━━━</b>\n` + 
-                                `✅ <b>DONE:</b> ${callId}\n` + 
-                                `<b>━━━━━━━━━━━━━━━</b>`;
-
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: CHAT_ID,
-                    text: dividerText,
-                    parse_mode: 'HTML'
-                })
-            });
-
-            alert("Success! Feedback sent successfully.");
-            location.reload();
-
-        } catch (error) {
-            alert("Error sending. Check internet or Token.");
-            console.error(error);
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Send Feedback to Telegram";
         }
-    }
-        alert("Success! Pehle Text gaya phir saari Photos.");
-        location.reload();
-    } catch (error) {
-        alert("Error sending. Check internet or Token.");
-        console.error(error);
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "Send Feedback to Telegram";
-    }
-}
     </script>
-
 </body>
-
 </html>
