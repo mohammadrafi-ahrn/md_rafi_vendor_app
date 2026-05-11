@@ -139,8 +139,13 @@
 
                     // Caption sirf pehli photo mein jayega
                     if (i === 0) {
-                        formData.append('caption', `✅ *NEW INSTALLATION*\n\n👤 Vendor: ${vendorKey.toUpperCase()}\n🆔 Call ID: ${callId}\n📸 Total Photos: ${files.length}`);
-                        formData.append('parse_mode', 'Markdown');
+                        const text = `<b>✅ NEW INSTALLATION</b>\n\n` +
+                                     `👤 <b>Vendor:</b> ${vendorKey.toUpperCase()}\n` +
+                                     `🆔 <b>Call ID:</b> ${callId}\n` +
+                                     `📸 <b>Total Photos:</b> ${files.length}`;
+                        
+                        formData.append('caption', text);
+                        formData.append('parse_mode', 'HTML'); // Markdown ki jagah HTML use karein
                     }
 
                     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
