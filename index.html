@@ -119,56 +119,71 @@
         }
 
         // Main Send Function
-    async function sendData() {
-    const callId = document.getElementById('manualCallId').value;
-    const files = document.getElementById('imageFiles').files;
-    const btn = document.getElementById('submitBtn');
+   async function sendData() {
+        const callId = document.getElementById('manualCallId').value;
+        const files = document.getElementById('imageFiles').files;
+        const btn = document.getElementById('submitBtn');
 
-    if (!CHAT_ID) return alert("Error: Invalid Vendor Link!");
-    if (!callId) return alert("Please enter Call ID");
-    if (files.length === 0) return alert("Please select at least one photo");
+        if (!CHAT_ID) return alert("Error: Invalid Vendor Link!");
+        if (!callId) return alert("Please enter Call ID");
+        if (files.length === 0) return alert("Please select at least one photo");
 
-    btn.disabled = true;
-    btn.innerHTML = `Sending...`;
+        btn.disabled = true;
+        btn.innerHTML = `Sending...`;
 
-    try {
-        // --- STEP 1: Pehle alag se Text Message bhejna ---
-        const textMsg = `<b>🔔 NEW JOB STARTED</b>\n\n<b>👤 Vendor:</b> ${vendorKey.toUpperCase()}\n<b>🆔 Call ID:</b> ${callId}\n\n<i>Photos niche aa rahi hain...</i>`;
-        
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: CHAT_ID,
-                text: textMsg,
-                parse_mode: 'HTML'
-            })
-        });
-
-        // --- STEP 2: Ab saari Photos bhejna ---
-        for (let i = 0; i < files.length; i++) {
-            const formData = new FormData();
-            formData.append('chat_id', CHAT_ID);
-            formData.append('photo', files[i]);
+        try {
+            // --- STEP 1: Pehle Start Message bhejna ---
+            const textMsg = `<b>🔔 NEW JOB STARTED</b>\n\n<b>👤 Vendor:</b> ${vendorKey.toUpperCase()}\n<b>🆔 Call ID:</b> ${callId}\n\n<i>Photos niche aa rahi hain...</i>`;
             
-            // Photo ke niche chota sa reference (Optional)
-            formData.append('caption', `Photo ${i+1} - ID: ${callId}`);
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: textMsg,
+                    parse_mode: 'HTML'
+                })
+            });
 
+            // --- STEP 2: Saari Photos bhejna (Loop) ---
+            for (let i = 0; i < files.length; i++) {
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('photo', files[i]);
+                formData.append('caption', `Photo ${i+1} - ID: ${callId}`);
+
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            // --- STEP 3: Sab khatam hone ke baad Divider Line bhejna (Loop ke BAHAAR) ---
             const dividerText = `<b>━━━━━━━━━━━━━━━</b>\n` + 
-                            `✅ <b>DONE:</b> ${callId}\n` + 
-                            `<b>━━━━━━━━━━━━━━━</b>`;
+                                `✅ <b>DONE:</b> ${callId}\n` + 
+                                `<b>━━━━━━━━━━━━━━━</b>`;
 
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: CHAT_ID,
-                text: dividerText,
-                parse_mode: 'HTML'
-            })
-        });
-        }
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: dividerText,
+                    parse_mode: 'HTML'
+                })
+            });
 
+            alert("Success! Feedback sent successfully.");
+            location.reload();
+
+        } catch (error) {
+            alert("Error sending. Check internet or Token.");
+            console.error(error);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Send Feedback to Telegram";
+        }
+    }
         alert("Success! Pehle Text gaya phir saari Photos.");
         location.reload();
     } catch (error) {
