@@ -92,6 +92,24 @@
                 </div>
             </div>
 
+            <!-- 2. PDF Upload (Optional) -->
+        <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Customer Invoice (PDF)</label>
+            <div class="upload-box">
+                <input type="file" id="pdfFile" accept="application/pdf" onchange="updateLabel('pdfFile', 'pdfLabel')">
+                <p id="pdfLabel" class="text-xs text-gray-500">📄 Tap to add PDF (Optional)</p>
+            </div>
+        </div>
+
+        <!-- 3. Video Upload (Optional) -->
+        <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Feedback Video (Max 10MB)</label>
+            <div class="upload-box">
+                <input type="file" id="videoFile" accept="video/*" onchange="updateLabel('videoFile', 'videoLabel')">
+                <p id="videoLabel" class="text-xs text-gray-500">🎥 Tap to add Video</p>
+            </div>
+        </div>
+
             <!-- 3. Auto-Fill Call ID -->
             <div class="hidden"> <!-- Ise hidden rakha hai background sync ke liye -->
                 <input type="text" id="autoCallId" readonly>
