@@ -47,13 +47,16 @@
         </div>
 
         <!-- 2. PDF Upload (Optional) -->
-        <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Customer Invoice (PDF)</label>
-            <div class="upload-box">
-                <input type="file" id="pdfFile" accept="application/pdf" onchange="updateLabel('pdfFile', 'pdfLabel')">
-                <p id="pdfLabel" class="text-xs text-gray-500">📄 Tap to add PDF (Optional)</p>
-            </div>
-        </div>
+         <!-- PDF Section Updated -->
+<div>
+    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Customer Invoice (PDF)</label>
+    <div class="upload-box" id="pdfDropZone">
+        <!-- captures="environment" mobile par direct camera/files manage karne mein help karta hai -->
+        <input type="file" id="pdfFile" accept=".pdf,application/pdf" onchange="updateLabel('pdfFile', 'pdfLabel')">
+        <p id="pdfLabel" class="text-xs text-gray-500">📄 Tap to add or Paste PDF</p>
+    </div>
+</div>
+
 
         <!-- 3. Video Upload (Optional) -->
         <div>
