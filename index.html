@@ -18,23 +18,27 @@
 <body>
 
 <div class="app-card">
+    <!-- Header -->
     <div class="bg-[#24A1DE] p-5 text-center text-white">
         <h1 class="text-lg font-bold tracking-wider">NEW REFRIGERATION INDIA</h1>
         <p class="text-[10px] opacity-80 uppercase">Samsung Authorized Service Partner</p>
     </div>
 
+    <!-- Vendor Profile -->
     <div class="flex flex-col items-center mb-4">
         <div class="vendor-badge" id="vCircle">?</div>
         <p class="text-xs text-gray-500 mt-1 font-bold" id="vName">IDENTIFYING...</p>
     </div>
 
     <div class="p-5 space-y-5">
+        <!-- Call ID -->
         <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Call ID Number</label>
             <input type="text" id="callId" placeholder="Ex: 4434984667" 
                 class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#24A1DE] text-sm">
         </div>
 
+        <!-- 1. Photos Upload -->
         <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Installation Photos</label>
             <div class="upload-box" id="box-photoFiles">
@@ -43,14 +47,16 @@
             </div>
         </div>
 
+        <!-- 2. PDF Upload (Strict PDF Filter & Paste) -->
         <div>
-            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Upload Invoice PDF</label>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Customer Invoice (PDF Only)</label>
             <div class="upload-box" id="box-pdfFile">
                 <input type="file" id="pdfFile" accept=".pdf,application/pdf" onchange="updateLabel('pdfFile', 'pdfLabel')">
                 <p id="pdfLabel" class="text-xs text-gray-500">📄 Tap to select or Paste PDF</p>
             </div>
         </div>
 
+        <!-- 3. Video Upload -->
         <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Feedback Video</label>
             <div class="upload-box" id="box-videoFile">
@@ -59,6 +65,7 @@
             </div>
         </div>
 
+        <!-- Submit Button -->
         <button onclick="processSubmission()" id="submitBtn"
             class="w-full bg-[#24A1DE] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#1d86ba] active:scale-95 transition-all">
             SUBMIT REPORT
@@ -68,7 +75,8 @@
 
 <script>
     const BOT_TOKEN = '8663616668:AAEV6r-gjE8gEHHqve2O7FScdQTYR1Bbylk';
-    
+    const GOOGLE_SHEET_URL = 'YOUR_GOOGLE_SCRIPT_WEB_APP_URL'; // Yahan apna Google Script URL dalein
+
     const vendorConfig = {
         "v1_achal": "-1003976175925", "v2_sultan": "-1003955371049",
         "v3_tajib": "-1003861702933", "v4_kasim": "-1003721490100",
@@ -82,14 +90,13 @@
     const vendorKey = params.get('v') || 'default';
     const CHAT_ID = vendorConfig[vendorKey];
 
-    // Cleaner Name Logic: v1_achal -> ACHAL
-    let cleanName = "UNKNOWN";
     if (vendorKey !== 'default') {
-        cleanName = vendorKey.replace(/v\d+_/g, '').toUpperCase();
-        document.getElementById('vCircle').innerText = cleanName.charAt(0);
-        document.getElementById('vName').innerText = "LOGGED IN: " + cleanName;
+        const name = vendorKey.split('_')[1].toUpperCase();
+        document.getElementById('vCircle').innerText = name.charAt(0);
+        document.getElementById('vName').innerText = "LOGGED IN: " + name;
     }
 
+    // Function to handle label updates and styling
     function updateLabel(inputId, labelId) {
         const input = document.getElementById(inputId);
         const label = document.getElementById(labelId);
@@ -100,6 +107,7 @@
         }
     }
 
+    // Paste PDF Logic
     document.addEventListener('paste', (e) => {
         const items = e.clipboardData.items;
         for (let i = 0; i < items.length; i++) {
@@ -125,51 +133,57 @@
         if (photos.length === 0) return alert("Please select photos");
 
         btn.disabled = true;
-        btn.innerText = "Sending Report...";
+        btn.innerText = "Syncing with Sheet & Telegram...";
 
         try {
-            // Initial Message
+            // 1. Sync with Google Sheet (Backend)
+            fetch(GOOGLE_SHEET_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ callId: id, vendor: vendorKey, status: "Done" })
+            });
+
+            // 2. Telegram: Text Info
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     chat_id: CHAT_ID,
-                    text: `<b>✅ NEW JOB REPORT</b>\n<b>🆔 Call ID:</b> ${id}\n<b>👤 Vendor:</b> ${cleanName}\n<b>📅 Date:</b> ${new Date().toLocaleDateString()}`,
+                    text: `<b>✅ REPORT SUBMITTED</b>\n<b>🆔 Call ID:</b> ${id}\n<b>👤 Vendor:</b> ${vendorKey.toUpperCase()}\n<b>📅 Date:</b> ${new Date().toLocaleDateString()}`,
                     parse_mode: 'HTML'
                 })
             });
 
-            // Photos with Caption
+            // 3. Telegram: Photos
             for (let i = 0; i < photos.length; i++) {
                 let fd = new FormData();
                 fd.append('chat_id', CHAT_ID);
                 fd.append('photo', photos[i]);
-                fd.append('caption', `🖼 Photo ${i+1} - ID: ${id}`);
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd });
             }
 
-            // PDF with Caption
+            // 4. Telegram: PDF (If selected)
             if (pdf) {
                 let fd = new FormData();
                 fd.append('chat_id', CHAT_ID);
                 fd.append('document', pdf);
-                fd.append('caption', `📄 INVOICE - ID: ${id}`);
+                fd.append('caption', `📄 INVOICE - ${id}`);
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: fd });
             }
 
-            // Video with Caption
+            // 5. Telegram: Video (If selected)
             if (video) {
                 let fd = new FormData();
                 fd.append('chat_id', CHAT_ID);
                 fd.append('video', video);
-                fd.append('caption', `🎥 FEEDBACK - ID: ${id}`);
+                fd.append('caption', `🎥 FEEDBACK - ${id}`);
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`, { method: 'POST', body: fd });
             }
 
-            alert("Report sent successfully! ✅");
+            alert("Data synced to Sheet & Telegram successfully!");
             location.reload();
         } catch (err) {
-            alert("Upload failed. Check internet.");
+            alert("Upload failed. Check connection.");
             btn.disabled = false;
             btn.innerText = "SUBMIT REPORT";
         }
@@ -177,3 +191,5 @@
 </script>
 </body>
 </html>
+
+
