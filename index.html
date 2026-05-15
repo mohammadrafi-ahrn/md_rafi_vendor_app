@@ -73,7 +73,7 @@
                 <label class="block text-xs font-bold text-gray-600 mb-1">CALL ID NUMBER</label>
                 <input type="text" id="manualCallId" placeholder="Enter ID..."
                     class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none transition text-sm"
-                   oninput="syncCallId();">
+                   oninput="validateAndSync(this)">
             </div>
 
             <div>
@@ -124,6 +124,16 @@
     </div>
 
     <script>
+
+        function validateAndSync(inputElement) {
+    // 1. सिर्फ नंबर्स (0-9) को छोड़कर बाकी सब कुछ (Letters, Symbols, Spaces) हटा देगा
+    inputElement.value = inputElement.value.replace(/[^0-9]/g, '');
+    
+    const autoCallId = document.getElementById('autoCallId');
+    if (autoCallId) {
+        autoCallId.value = inputElement.value;
+    }
+}
         const BOT_TOKEN = '8663616668:AAEV6r-gjE8gEHHqve2O7FScdQTYR1Bbylk'; 
         const vendorConfig = {
             "v1_achal" : "-1003976175925",
